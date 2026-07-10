@@ -247,13 +247,12 @@ export async function exportData() {
     sections: await db.sections.toArray(),
     versions: await db.versions.toArray(),
   }
-  const json = JSON.stringify(data)
-  const compressed = LZString.compressToUTF16(json)
+  const json = JSON.stringify(data, null, 2)
   const filename = `wikime-backup-${new Date().toISOString().split('T')[0]}.json`
 
   const uri = await Filesystem.writeFile({
     path: filename,
-    data: compressed,
+    data: json,
     directory: Directory.Documents,
   })
 
