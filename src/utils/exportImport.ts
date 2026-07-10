@@ -253,7 +253,7 @@ export async function exportData() {
   const uri = await Filesystem.writeFile({
     path: filename,
     data: json,
-    directory: Directory.Documents,
+    directory: Directory.Data,
     encoding: Encoding.UTF8,
   })
 
