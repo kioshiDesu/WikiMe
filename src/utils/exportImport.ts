@@ -247,16 +247,26 @@ export async function exportData() {
   }
   const json = JSON.stringify(data)
   const compressed = LZString.compressToUTF16(json)
+  const filename = `wikime-backup-${new Date().toISOString().split('T')[0]}.json`
   const blob = new Blob([compressed], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `wikime-backup-${new Date().toISOString().split('T')[0]}.json`
-  a.style.display = 'none'
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 100)
+
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ files: [new File([blob], filename, { type: 'application/json' })], title: filename })
+      return
+    } catch { /* user cancelled or share not supported */ }
+  }
+  
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.style.display = 'none'
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => {
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }, 1000)
+  }
 }
