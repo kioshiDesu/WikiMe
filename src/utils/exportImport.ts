@@ -1,6 +1,6 @@
 import { db } from '../db/db'
 import LZString from 'lz-string'
-import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
 
 export interface EntryConflict {
@@ -254,6 +254,7 @@ export async function exportData() {
     path: filename,
     data: json,
     directory: Directory.Documents,
+    encoding: Encoding.UTF8,
   })
 
   try {
