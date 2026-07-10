@@ -7,7 +7,6 @@ import { useCategories } from '../hooks/useCategories'
 import { useSections } from '../hooks/useSections'
 import { useEntries } from '../hooks/useEntries'
 import { useToast } from '../context/ToastContext'
-import { tryDecompress } from '../utils/compress'
 import { EntryCard } from '../components/EntryCard'
 import { SearchBar } from '../components/SearchBar'
 import { VirtualList } from '../components/VirtualList'
@@ -79,7 +78,7 @@ export function CategoryPage() {
     if (!q) return sortedEntries
     return sortedEntries.filter(e =>
       (e.title || '').toLowerCase().includes(q) ||
-      tryDecompress(e.contentHtml || '', e.compressed).toLowerCase().includes(q)
+      (e.contentHtml || '').toLowerCase().includes(q)
     )
   }, [debouncedQuery, sortedEntries])
 

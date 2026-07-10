@@ -11,7 +11,6 @@ import { Modal, ConfirmModal } from '../components/Modal'
 import { EmptyState } from '../components/EmptyState'
 import { ContentSkeleton } from '../components/SkeletonLoader'
 import { iconLookup } from '../utils/icons'
-import { tryDecompress, compressHtml } from '../utils/compress'
 
 function stripHtml(html: string) {
   const d = document.createElement('div')
@@ -125,7 +124,7 @@ export function EntryViewPage() {
       li.setAttribute('data-checked', checked ? 'false' : 'true')
       const cb = li.querySelector<HTMLInputElement>('input[type="checkbox"]')
       if (cb) cb.checked = !checked
-      db.entries.update(entry.id, { contentHtml: compressHtml(el.innerHTML), updatedAt: new Date() })
+      db.entries.update(entry.id, { contentHtml: el.innerHTML, updatedAt: new Date() })
     }
     el.addEventListener('click', handler)
     return () => el.removeEventListener('click', handler)
@@ -165,7 +164,7 @@ export function EntryViewPage() {
   useEffect(() => {
     db.entries.get(entryId).then(data => {
       if (data) {
-        const d = { ...data, contentHtml: tryDecompress(data.contentHtml, data.compressed) }
+        const d = { ...data, contentHtml: data.contentHtml }
         setEntry(d)
         addRecentEntry({ id: d.id, title: d.title, categoryId: d.categoryId })
         saveVersion(d.id!, d.title, d.contentHtml)
@@ -418,7 +417,7 @@ export function EntryViewPage() {
                   try {
                     await restoreVersion(entryId, v.id)
                     const updated = await db.entries.get(entryId)
-                    if (updated) setEntry({ ...updated, contentHtml: tryDecompress(updated.contentHtml, updated.compressed) })
+                    if (updated) setEntry({ ...updated, contentHtml: updated.contentHtml })
                     getVersions(entryId).then(setVersions)
                   } catch { showToast('Failed to restore version', 'error') }
                 }}

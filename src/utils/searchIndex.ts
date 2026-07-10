@@ -1,5 +1,4 @@
 import type { WikiMeDB } from '../db/db'
-import { tryDecompress } from './compress'
 
 export function stripHtml(html: string): string {
   const div = document.createElement('div')
@@ -37,7 +36,7 @@ export async function rebuildAllSearchIndexes(db: WikiMeDB): Promise<void> {
     const chunk = allEntries.slice(i, i + 100)
     const data: { entryId: number; token: string }[] = []
     for (const entry of chunk) {
-      const content = tryDecompress(entry.contentHtml || '', entry.compressed)
+      const content = entry.contentHtml || ''
       const text = entry.title + ' ' + stripHtml(content)
       const tokens = tokenize(text)
       for (const token of tokens) {

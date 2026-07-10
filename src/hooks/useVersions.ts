@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import { db, type EntryVersion, MAX_VERSIONS } from '../db/db'
-import { compressHtml, decompressHtml, tryDecompress } from '../utils/compress'
 
 const VERSION_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000
 
@@ -17,13 +16,13 @@ export function useVersions() {
     const all = await db.versions.where('entryId').equals(entryId).sortBy('savedAt')
     if (all.length > 0) {
       const latest = all[all.length - 1]
-      const latestContent = tryDecompress(latest.contentHtml, latest.compressed)
+      const latestContent = latest.contentHtml
       if (normHtml(latestContent) === normHtml(contentHtml) && norm(latest.title) === norm(title)) return
     }
     await db.versions.add({
       entryId,
       title: norm(title),
-      contentHtml: compressHtml(contentHtml),
+      contentHtml: contentHtml,
       compressed: true,
       savedAt: new Date(),
     })
@@ -45,7 +44,7 @@ export function useVersions() {
     const current = await db.entries.get(entryId)
     if (!current) return
     if (current.contentHtml !== version.contentHtml || current.title !== version.title) {
-      const rawContent = tryDecompress(current.contentHtml, current.compressed)
+      const rawContent = current.contentHtml
       await saveVersion(entryId, current.title, rawContent)
     }
     await db.entries.update(entryId, {

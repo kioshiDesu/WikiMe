@@ -1,7 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react'
 import { db, type Entry, DEFAULT_TRASH_DAYS } from '../db/db'
 import { buildSearchIndex } from '../utils/searchIndex'
-import { compressHtml, tryDecompress } from '../utils/compress'
 
 const DEBOUNCE_MS = 500
 
@@ -33,7 +32,7 @@ export function useEntryMutations() {
     const rawContent = data.contentHtml || ''
     const id = await db.entries.add({
       ...data,
-      contentHtml: compressHtml(rawContent),
+      contentHtml: rawContent,
       compressed: true,
       deletedAt: null,
       trashDays: DEFAULT_TRASH_DAYS,
@@ -57,14 +56,14 @@ export function useEntryMutations() {
     let rawContent: string | undefined
     if (data.contentHtml !== undefined) {
       rawContent = data.contentHtml
-      updateData.contentHtml = compressHtml(rawContent)
+      updateData.contentHtml = rawContent
       updateData.compressed = true
     }
     await db.entries.update(id, updateData)
     if (data.title !== undefined || rawContent !== undefined) {
       const entry = await db.entries.get(id)
       if (entry) {
-        const content = rawContent ?? tryDecompress(entry.contentHtml, entry.compressed)
+        const content = rawContent ?? entry.contentHtml
         scheduleRebuild(id, entry.title, content)
       }
     }

@@ -86,6 +86,27 @@ export class WikiMeDB extends Dexie {
         if (e.compressed === undefined) e.compressed = false
       })
     })
+    this.version(7).stores({
+      sections: '++id, name',
+      categories: '++id, name, sectionId',
+      entries: '++id, categoryId, title, pinned, updatedAt, deletedAt, [categoryId+deletedAt], [categoryId+pinned+updatedAt]',
+      versions: '++id, entryId, savedAt, [entryId+savedAt]',
+      searchIndex: '++id, entryId, token',
+    }).upgrade(async tx => {
+      const { default: LZString } = await import('lz-string')
+      await tx.table('entries').toCollection().modify(e => {
+        if (e.compressed) {
+          e.contentHtml = LZString.decompressFromUTF16(e.contentHtml) || e.contentHtml
+          e.compressed = false
+        }
+      })
+      await tx.table('versions').toCollection().modify(e => {
+        if (e.compressed) {
+          e.contentHtml = LZString.decompressFromUTF16(e.contentHtml) || e.contentHtml
+          e.compressed = false
+        }
+      })
+    })
   }
 }
 

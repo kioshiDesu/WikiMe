@@ -8,7 +8,6 @@ import { RichEditor } from '../components/RichEditor'
 import { useToast } from '../context/ToastContext'
 import { db } from '../db/db'
 import { addRecentEntry } from '../utils/recent'
-import { tryDecompress } from '../utils/compress'
 import type { Entry, Category } from '../types'
 
 export function EntryEditPage() {
@@ -38,7 +37,7 @@ export function EntryEditPage() {
         navigate('/', { replace: true })
         return
       }
-      setExistingEntry({ ...data, contentHtml: tryDecompress(data.contentHtml, data.compressed) })
+      setExistingEntry({ ...data, contentHtml: data.contentHtml })
     })
   }, [entryId])
 

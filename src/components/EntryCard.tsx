@@ -2,7 +2,6 @@ import { motion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faThumbtack, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { formatRelative } from '../utils/time'
-import { tryDecompress } from '../utils/compress'
 import type { Entry } from '../types'
 
 interface EntryCardProps {
@@ -22,7 +21,7 @@ function truncate(text: string, max: number): string {
 }
 
 export function EntryCard({ entry, onClick }: EntryCardProps) {
-  const html = tryDecompress(entry.contentHtml || '', (entry as any).compressed)
+  const html = entry.contentHtml || ''
   const text = html ? stripHtml(html) : ''
   const preview = text ? truncate(text, 100) : ''
   const words = text.trim() ? text.trim().split(/\s+/).length : 0

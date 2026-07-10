@@ -8,7 +8,6 @@ import { useCategories } from '../hooks/useCategories'
 import { useSections } from '../hooks/useSections'
 import { useEntries } from '../hooks/useEntries'
 import { useSessionState } from '../hooks/useSessionState'
-import { tryDecompress } from '../utils/compress'
 import { CategoryCard } from '../components/CategoryCard'
 import { EmptyState } from '../components/EmptyState'
 import { SearchBar } from '../components/SearchBar'
@@ -202,7 +201,7 @@ const { showToast } = useToast()
             categoryName: cat?.name || 'Uncategorized',
             categoryColor: cat?.color || '#94a3b8',
             title: e.title || '',
-            contentHtml: tryDecompress(e.contentHtml || '', e.compressed),
+            contentHtml: e.contentHtml || '',
             pinned: e.pinned,
             updatedAt: e.updatedAt?.toISOString() || '',
           }
