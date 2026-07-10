@@ -5,10 +5,6 @@ on:
     branches: [master]
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: wikime
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,7 +21,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: wikime/package-lock.json
 
       - name: Install Android SDK
         run: |
@@ -47,7 +42,7 @@ jobs:
           ANDROID_HOME: /opt/android-sdk
 
       - name: Build APK
-        working-directory: wikime/android
+        working-directory: android
         run: ./gradlew assembleDebug
         env:
           ANDROID_HOME: /opt/android-sdk
@@ -55,4 +50,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: wikime-apk
-          path: wikime/android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
