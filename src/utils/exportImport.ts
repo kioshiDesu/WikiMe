@@ -1,5 +1,7 @@
 import { db } from '../db/db'
 import LZString from 'lz-string'
+import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 
 export interface EntryConflict {
   index: number
@@ -248,24 +250,16 @@ export async function exportData() {
   const json = JSON.stringify(data)
   const compressed = LZString.compressToUTF16(json)
   const filename = `wikime-backup-${new Date().toISOString().split('T')[0]}.json`
-  const blob = new Blob([compressed], { type: 'application/json' })
 
-  if (typeof navigator.share === 'function') {
-    try {
-      await navigator.share({ files: [new File([blob], filename, { type: 'application/json' })], title: filename })
-      return
-    } catch { /* user cancelled or share not supported */ }
+  const uri = await Filesystem.writeFile({
+    path: filename,
+    data: compressed,
+    directory: Directory.Documents,
+  })
+
+  try {
+    await Share.share({ files: [uri.uri], title: filename })
+  } catch {
+    /* user cancelled */
   }
-
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.style.display = 'none'
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 1000)
 }
