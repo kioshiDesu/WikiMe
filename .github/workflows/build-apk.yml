@@ -43,7 +43,7 @@ jobs:
 
       - name: Build APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: chmod +x gradlew && ./gradlew assembleDebug
         env:
           ANDROID_HOME: /opt/android-sdk
 
