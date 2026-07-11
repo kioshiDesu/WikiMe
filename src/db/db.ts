@@ -107,6 +107,13 @@ export class WikiMeDB extends Dexie {
         }
       })
     })
+    this.version(8).stores({
+      sections: '++id, name',
+      categories: '++id, name, sectionId',
+      entries: '++id, categoryId, title, pinned, createdAt, updatedAt, deletedAt, [categoryId+deletedAt], [categoryId+pinned+updatedAt]',
+      versions: '++id, entryId, savedAt, [entryId+savedAt]',
+      searchIndex: '++id, entryId, token',
+    })
   }
 }
 

@@ -20,19 +20,29 @@ export function TrashPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [showPermanentDelete, setShowPermanentDelete] = useState(false)
   const [showAutoDelete, setShowAutoDelete] = useState(false)
+  const [showDeleteAll, setShowDeleteAll] = useState(false)
   const [autoDeleteDays, setAutoDeleteDays] = useState(7)
 
   useEffect(() => {
     setConfig({
       title: 'Trash', showBack: true, onBack: () => navigate('/'),
       rightAction: trashedEntries.length > 0 ? (
-        <button
-          onClick={() => setShowAutoDelete(true)}
-          className="min-w-10 min-h-10 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-all"
-          title="Auto-delete settings"
-        >
-          <FontAwesomeIcon icon={faClock} className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowAutoDelete(true)}
+            className="min-w-10 min-h-10 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-all"
+            title="Auto-delete settings"
+          >
+            <FontAwesomeIcon icon={faClock} className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowDeleteAll(true)}
+            className="min-w-10 min-h-10 flex items-center justify-center rounded-xl text-red-500 dark:text-red-400 active:bg-red-50 dark:active:bg-red-900/20 transition-all"
+            title="Delete all"
+          >
+            <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
+          </button>
+        </div>
       ) : undefined,
     })
   }, [setConfig, trashedEntries.length])
@@ -57,6 +67,14 @@ export function TrashPage() {
     setSelected(new Set())
     setShowPermanentDelete(false)
     showToast('Permanently deleted', 'success')
+  }
+
+  const handleDeleteAll = async () => {
+    for (const e of trashedEntries) {
+      if (e.id) await deleteEntry(e.id)
+    }
+    setShowDeleteAll(false)
+    showToast('All trashed entries deleted', 'success')
   }
 
   const handleSetAutoDelete = async () => {
@@ -186,6 +204,20 @@ export function TrashPage() {
           </button>
           <button onClick={handleSetAutoDelete} className="flex-1 py-2 text-sm rounded-lg bg-teal-500 text-white active:opacity-80 transition-all">
             Apply to all
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={showDeleteAll} onClose={() => setShowDeleteAll(false)} title="Delete all?">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          All {trashedEntries.length} trashed {trashedEntries.length === 1 ? 'entry' : 'entries'} will be permanently deleted. This cannot be undone.
+        </p>
+        <div className="flex gap-2">
+          <button onClick={() => setShowDeleteAll(false)} className="flex-1 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 active:bg-gray-200 dark:active:bg-gray-700 transition-all">
+            Cancel
+          </button>
+          <button onClick={handleDeleteAll} className="flex-1 py-2 text-sm rounded-lg bg-red-500 text-white active:opacity-80 transition-all">
+            Delete all
           </button>
         </div>
       </Modal>

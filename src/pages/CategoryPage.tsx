@@ -50,6 +50,7 @@ export function CategoryPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [showBulkDelete, setShowBulkDelete] = useState(false)
   const [showBulkMove, setShowBulkMove] = useState(false)
+  const [showPinConfirm, setShowPinConfirm] = useState(false)
 
   const [allCategories, setAllCategories] = useState<Category[]>([])
 
@@ -173,24 +174,10 @@ export function CategoryPage() {
   items={query.trim() ? filtered : sortedEntries}
   estimatedItemHeight={116}
   renderItem={(entry) => (
-    <div key={entry.id} className="flex items-start">
-                    {selectMode && (
-                      <button
-                        onClick={() => {
-                          const next = new Set(selected)
-                          if (next.has(entry.id!)) next.delete(entry.id!)
-                          else next.add(entry.id!)
-                          setSelected(next)
-                        }}
-                        className={`flex-shrink-0 ml-3 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                          selected.has(entry.id!)
-                            ? 'bg-teal-500 border-teal-500 text-white'
-                            : 'border-gray-300 dark:border-gray-600'
-                        }`}
-                      >
-                        {selected.has(entry.id!) && <FontAwesomeIcon icon={faCheck} className="w-3 h-3" />}
-                      </button>
-                    )}
+    <div
+      key={entry.id}
+      className={`flex items-start ${selectMode && selected.has(entry.id!) ? 'bg-black/5 dark:bg-white/5' : ''}`}
+    >
                     <div className="flex-1 min-w-0">
                       <EntryCard
                         entry={entry}
@@ -215,12 +202,7 @@ export function CategoryPage() {
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-500 dark:text-gray-400">{selected.size} selected</span>
             <button
-              onClick={async () => {
-                await db.entries.where(':id').anyOf([...selected]).modify({ pinned: true, updatedAt: new Date() })
-                showToast(`Pinned ${selected.size} entries`, 'success')
-                setSelected(new Set())
-                await refresh()
-              }}
+              onClick={() => setShowPinConfirm(true)}
               className="ml-auto px-4 py-2 rounded-xl text-sm font-medium text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30 active:bg-teal-100 dark:active:bg-teal-900/50 transition-all"
             >
               <FontAwesomeIcon icon={faThumbtack} className="w-3 h-3 mr-1.5 rotate-45" />
@@ -245,6 +227,20 @@ export function CategoryPage() {
       )}
 
       {!(selectMode && selected.size > 0) && <FAB onClick={() => navigate(`/entry/new/${catId}`)} />}
+
+      <ConfirmModal
+        open={showPinConfirm}
+        onClose={() => setShowPinConfirm(false)}
+        onConfirm={async () => {
+          await db.entries.where(':id').anyOf([...selected]).modify({ pinned: true, updatedAt: new Date() })
+          showToast(`Pinned ${selected.size} entries`, 'success')
+          setSelected(new Set())
+          setShowPinConfirm(false)
+          await refresh()
+        }}
+        title="Pin entries"
+        message={`Pin ${selected.size} selected ${selected.size === 1 ? 'entry' : 'entries'}?`}
+      />
 
       <ConfirmModal
         open={showBulkDelete}
@@ -325,23 +321,33 @@ export function CategoryPage() {
           </div>
         }
       >
-        <div className="space-y-4">
-          <input
-            type="text"
-            value={editName}
-            onChange={e => setEditName(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-teal-500/50"
-            autoFocus
-          />
-          <select
-            value={editSection ?? ''}
-            onChange={e => setEditSection(Number(e.target.value))}
-            className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-teal-500/50 appearance-none"
-          >
-            {sections.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+        <div className="space-y-5">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+              Name
+            </label>
+            <input
+              type="text"
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-teal-500/50"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+              Section
+            </label>
+            <select
+              value={editSection ?? ''}
+              onChange={e => setEditSection(Number(e.target.value))}
+              className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-teal-500/50 appearance-none"
+            >
+              {sections.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </Modal>
     </div>

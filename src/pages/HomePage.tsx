@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLayerGroup, faCog, faFileLines, faFolder, faChevronLeft, faThumbtack, faPen, faTrashCan, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
+import { faLayerGroup, faCog, faFileLines, faFolder, faChevronLeft, faChevronDown, faThumbtack, faPen, faTrashCan, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 import { useHeader } from '../context/HeaderContext'
 import { useCategories } from '../hooks/useCategories'
 import { useSections } from '../hooks/useSections'
@@ -266,7 +266,7 @@ const { showToast } = useToast()
                         {entry.categoryName}
                       </span>
                     </div>
-                    <EntryCard entry={entry as any} onClick={() => navigate(`/entry/${entry.id}`)} />
+                    <EntryCard entry={entry as any} onClick={() => navigate(`/entry/${entry.id}`, { state: { fromHome: true } })} />
                   </div>
                 ))}
               </div>
@@ -283,7 +283,7 @@ const { showToast } = useToast()
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 <AnimatePresence mode="popLayout">
                   {entries.filter(e => e.pinned).map(entry => (
-                    <EntryCard key={entry.id} entry={entry} onClick={() => navigate(`/entry/${entry.id}`)} />
+                    <EntryCard key={entry.id} entry={entry} onClick={() => navigate(`/entry/${entry.id}`, { state: { fromHome: true } })} />
                   ))}
                 </AnimatePresence>
                 {entries.filter(e => e.pinned).length === 0 && (
@@ -291,10 +291,11 @@ const { showToast } = useToast()
                     <p className="text-xs text-gray-400 dark:text-gray-500">Pin entries to keep them handy — tap the pin icon on any entry</p>
                   </div>
                 )}
-              </div>
             </div>
-              <div>
-                <div className="flex items-center justify-between px-4 pt-5 pb-2">
+          </div>
+          <div className="h-3" />
+            <div>
+              <div className="flex items-center justify-between px-4 pt-5 pb-2">
                     <div className="flex items-center gap-2">
                       <FontAwesomeIcon icon={faFileLines} className="w-3.5 h-3.5 text-gray-400" />
                       <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -338,7 +339,7 @@ const { showToast } = useToast()
                                   </span>
                                 </div>
                               )}
-                              <EntryCard entry={entry} onClick={() => navigate(`/entry/${entry.id}`)} />
+                              <EntryCard entry={entry} onClick={() => navigate(`/entry/${entry.id}`, { state: { fromHome: true } })} />
                             </div>
                           ))
                         )
@@ -368,51 +369,62 @@ const { showToast } = useToast()
                       </div>
                     ) : g.cats.length > 30 ? (
                       <div className="px-4 pb-2 space-y-2">
-                        {groupCategoriesByLetter(g.cats).map(group => (
-                          <div key={group.letter}>
-                            <div className="sticky top-0 z-10 flex items-center gap-2 py-1.5 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800">
-                              {group.letter}
-                              <span className="text-[9px] font-normal text-gray-300 dark:text-gray-600">{group.categories.length}</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 mt-1">
-                              {group.categories.map(cat => (
-                                <CategoryCard key={cat.id} category={cat} entryCount={getCount(cat.id!)} onClick={() => navigate(`/category/${cat.id}`)} />
+                        {(() => {
+                          const groups = groupCategoriesByLetter(g.cats)
+                          const showAll = expandedSections.has(g.section.id!)
+                          const visible = showAll ? groups : groups.slice(0, 3)
+                          return (
+                            <>
+                              {visible.map(group => (
+                                <div key={group.letter}>
+                                  <div className="flex items-center gap-2 py-1.5 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                                    {group.letter}
+                                    <span className="text-[9px] font-normal text-gray-300 dark:text-gray-600">{group.categories.length}</span>
+                                  </div>
+                                  <div className="rounded-xl overflow-hidden">
+                                    {group.categories.map((cat, idx) => (
+                                      <div key={cat.id} className={idx > 0 ? 'border-t border-gray-100 dark:border-gray-800/50' : ''}>
+                                        <CategoryCard category={cat} entryCount={getCount(cat.id!)} onClick={() => navigate(`/category/${cat.id}`)} />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               ))}
-                            </div>
-                          </div>
-                        ))}
+                              {groups.length > 3 && (
+                                <button
+                                  onClick={() => toggleSection(g.section.id!)}
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-teal-600 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-900/10 rounded-xl active:bg-teal-100 dark:active:bg-teal-900/20 transition-all"
+                                >
+                                  <FontAwesomeIcon icon={faChevronDown} className={`w-3 h-3 transition-transform ${showAll ? 'rotate-180' : ''}`} />
+                                  {showAll ? 'Show less' : `+${groups.length - 3} more groups`}
+                                </button>
+                              )}
+                            </>
+                          )
+                        })()}
                       </div>
                     ) : (
-                      <div className="px-4 pb-2 grid grid-cols-3 gap-2">
-                        <AnimatePresence mode="popLayout">
-                          {(expandedSections.has(g.section.id!) ? g.cats : g.cats.slice(0, 3)).map(cat => (
-                            <CategoryCard
-                              key={cat.id}
-                              category={cat}
-                              entryCount={getCount(cat.id!)}
-                              onClick={() => navigate(`/category/${cat.id}`)}
-                            />
-                          ))}
-                          {g.cats.length > 3 && !expandedSections.has(g.section.id!) && (
-                            <motion.button
-                              layout
-                              key="show-more"
-                              onClick={() => toggleSection(g.section.id!)}
-                              className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 h-14 bg-transparent active:scale-95 transition-all"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.15 }}
-                            >
-                              <span className="text-xs font-medium text-teal-500">+{g.cats.length - 3} more</span>
-                            </motion.button>
-                          )}
-                        </AnimatePresence>
-                        {g.cats.length > 3 && expandedSections.has(g.section.id!) && (
+                      <div className="px-4 pb-2">
+                        <div className="rounded-xl overflow-hidden">
+                          <AnimatePresence mode="popLayout">
+                            {(expandedSections.has(g.section.id!) ? g.cats : g.cats.slice(0, 3)).map((cat, idx) => (
+                              <div key={cat.id} className={idx > 0 ? 'border-t border-gray-100 dark:border-gray-800/50' : ''}>
+                                <CategoryCard
+                                  category={cat}
+                                  entryCount={getCount(cat.id!)}
+                                  onClick={() => navigate(`/category/${cat.id}`)}
+                                />
+                              </div>
+                            ))}
+                          </AnimatePresence>
+                        </div>
+                        {g.cats.length > 3 && (
                           <button
                             onClick={() => toggleSection(g.section.id!)}
-                            className="col-span-3 text-center text-xs text-teal-500 py-2 active:text-teal-600 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 mt-1 text-sm font-medium text-teal-600 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-900/10 rounded-xl active:bg-teal-100 dark:active:bg-teal-900/20 transition-all"
                           >
-                            Show less
+                            <FontAwesomeIcon icon={faChevronDown} className={`w-3 h-3 transition-transform ${expandedSections.has(g.section.id!) ? 'rotate-180' : ''}`} />
+                            {expandedSections.has(g.section.id!) ? 'Show less' : `+${g.cats.length - 3} more`}
                           </button>
                         )}
                       </div>

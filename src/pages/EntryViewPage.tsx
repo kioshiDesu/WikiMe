@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useLayoutEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faThumbtack, faCalendar, faFolderOpen, faPencil, faTrash, faSearch, faChevronUp, faChevronDown, faXmark, faClock, faRotateLeft } from '@fortawesome/free-solid-svg-icons'
 import DOMPurify from 'dompurify'
@@ -25,6 +25,7 @@ export function EntryViewPage() {
   const { updateEntry, trashEntry, getVersions, restoreVersion, saveVersion } = useEntries()
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
   const { setConfig } = useHeader()
 
   const [entry, setEntry] = useState<Entry | null>(null)
@@ -194,7 +195,7 @@ export function EntryViewPage() {
     setConfig({
       title: entry.title || 'Untitled',
       showBack: true,
-      onBack: () => navigate(`/category/${entry.categoryId}`),
+      onBack: () => navigate((location.state as any)?.fromHome ? '/' : `/category/${entry.categoryId}`),
       rightAction: (
         <button
           onClick={() => {
@@ -217,7 +218,7 @@ export function EntryViewPage() {
   const handleTrash = async () => {
     await trashEntry(entryId)
     showToast('Moved to trash', 'success')
-    navigate(`/category/${entry.categoryId}`)
+    navigate(`/category/${entry.categoryId}`, { replace: true })
   }
 
   const handleMove = async (newCategoryId: number) => {
@@ -236,8 +237,8 @@ export function EntryViewPage() {
 
   return (
     <div className="p-4 pb-24">
-      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 select-none">
-        {entry.title || 'Untitled'}
+      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight mb-1.5">
+        {entry.title}
       </h1>
       <div className="flex items-center gap-2 mb-3 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
         {category && (

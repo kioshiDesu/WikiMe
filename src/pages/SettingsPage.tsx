@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload, faUpload, faInfoCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faUpload, faInfoCircle, faTrash, faFileLines, faFolder, faLayerGroup, faClock } from '@fortawesome/free-solid-svg-icons'
 import { useHeader } from '../context/HeaderContext'
 import { useToast } from '../context/ToastContext'
 import { exportData, analyzeImport, executeImport } from '../utils/exportImport'
@@ -31,6 +31,42 @@ export function SettingsPage() {
   const [conflicts, setConflicts] = useState<EntryConflict[]>([])
   const [overwriteSet, setOverwriteSet] = useState<Set<number>>(new Set())
   const [importing, setImporting] = useState(false)
+
+  const [stats, setStats] = useState<{ entries: number; categories: number; sections: number; joinedDays: number } | null>(null)
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [entryCount, catCount, secCount] = await Promise.all([
+          db.entries.count(),
+          db.categories.count(),
+          db.sections.count(),
+        ])
+        let earliestEntry: Date | null = null
+        let earliestCat: Date | null = null
+        let earliestSec: Date | null = null
+        try {
+          const e = await db.entries.orderBy('updatedAt').first()
+          if (e?.updatedAt) earliestEntry = new Date(e.updatedAt)
+        } catch {}
+        try {
+          const c = await db.categories.orderBy('createdAt').first()
+          if (c?.createdAt) earliestCat = new Date(c.createdAt)
+        } catch {}
+        try {
+          const s = await db.sections.orderBy('createdAt').first()
+          if (s?.createdAt) earliestSec = new Date(s.createdAt)
+        } catch {}
+        const dates = [earliestEntry, earliestCat, earliestSec].filter(Boolean) as Date[]
+        const earliest = dates.length ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date()
+        const joinedDays = Math.max(1, Math.floor((Date.now() - earliest.getTime()) / 86400000))
+        setStats({ entries: entryCount, categories: catCount, sections: secCount, joinedDays })
+      } catch {
+        setStats({ entries: 0, categories: 0, sections: 0, joinedDays: 1 })
+      }
+    }
+    loadStats()
+  }, [])
 
   useEffect(() => {
     setConfig({ title: 'Settings', showBack: true, onBack: () => navigate('/') })
@@ -162,6 +198,40 @@ export function SettingsPage() {
           Erase
         </button>
       </Row>
+
+      <div className="h-2" />
+
+      <div className="px-4 py-4">
+        <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Dashboard</div>
+        {stats ? (
+          <div className="grid grid-cols-4 gap-3">
+            <div className="flex flex-col items-center gap-1 p-3 bg-white dark:bg-gray-900 rounded-xl">
+              <FontAwesomeIcon icon={faFileLines} className="w-4 h-4 text-accent" />
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.entries}</span>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Notes</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 p-3 bg-white dark:bg-gray-900 rounded-xl">
+              <FontAwesomeIcon icon={faFolder} className="w-4 h-4 text-accent" />
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.categories}</span>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Categories</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 p-3 bg-white dark:bg-gray-900 rounded-xl">
+              <FontAwesomeIcon icon={faLayerGroup} className="w-4 h-4 text-accent" />
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.sections}</span>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Sections</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 p-3 bg-white dark:bg-gray-900 rounded-xl">
+              <FontAwesomeIcon icon={faClock} className="w-4 h-4 text-accent" />
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.joinedDays}</span>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Days</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-4">
+            <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
 
       <div className="h-2" />
 
