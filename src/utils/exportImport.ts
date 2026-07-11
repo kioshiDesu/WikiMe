@@ -2,14 +2,6 @@ import { db } from '../db/db'
 import LZString from 'lz-string'
 import SaveToDownloads from '../utils/saveToDownloads'
 
-
-export interface EntryConflict {
-  index: number
-  title: string
-  categoryName: string
-  existingId: number
-}
-
 interface ImportData {
   version: number
   sections: any[]
@@ -55,77 +47,7 @@ function parseImport(raw: string): ImportData {
   return data
 }
 
-export async function analyzeImport(raw: string): Promise<{
-  conflicts: EntryConflict[]
-  preview: { sections: number; categories: number; entries: number }
-}> {
-  const data = parseImport(raw)
-  const existingSections = await db.sections.toArray()
-  const existingCategories = await db.categories.toArray()
-  const existingEntries = await db.entries.toArray()
-
-  const oldToNewSection = new Map<number, number | 'new'>()
-  for (const s of data.sections || []) {
-    const match = existingSections.find(ex => ex.name === s.name)
-    oldToNewSection.set(s.id, match ? match.id! : 'new')
-  }
-
-  const conflicts: EntryConflict[] = []
-  const oldToNewCategory = new Map<number, number | 'new'>()
-
-  for (const c of data.categories) {
-    const targetSectionId = c.sectionId != null
-      ? oldToNewSection.get(c.sectionId) ?? null
-      : null
-    const match = existingCategories.find(ex =>
-      ex.name === c.name &&
-      (targetSectionId == null ? ex.sectionId == null : ex.sectionId === targetSectionId)
-    )
-    oldToNewCategory.set(c.id, match ? match.id! : 'new')
-  }
-
-  for (let i = 0; i < data.entries.length; i++) {
-    const e = data.entries[i]
-    const catId = oldToNewCategory.get(e.categoryId)
-    if (catId == null || catId === 'new') continue
-    const existingEntry = existingEntries.find(ex =>
-      ex.title === e.title && ex.categoryId === catId && !ex.deletedAt
-    )
-    if (existingEntry) {
-      const cat = existingCategories.find(c => c.id === catId)
-      conflicts.push({
-        index: i,
-        title: e.title,
-        categoryName: cat?.name || 'Unknown',
-        existingId: existingEntry.id!,
-      })
-    }
-  }
-
-  return {
-    conflicts,
-    preview: {
-      sections: data.sections?.length || 0,
-      categories: data.categories.length,
-      entries: data.entries.length,
-    },
-  }
-}
-
-function nextAvailableTitle(base: string, categoryId: number, existingEntries: any[]): string {
-  let counter = 1
-  let title: string
-  do {
-    title = `${base} (${counter})`
-    counter++
-  } while (existingEntries.some(e => e.title === title && e.categoryId === categoryId))
-  return title
-}
-
-export async function executeImport(
-  raw: string,
-  overwriteIndices: Set<number>,
-): Promise<void> {
+export async function executeImport(raw: string): Promise<void> {
   const data = parseImport(raw)
 
   await db.transaction('rw', db.categories, db.entries, db.sections, db.versions, db.searchIndex, async () => {
@@ -133,7 +55,7 @@ export async function executeImport(
 
     const existingSections = await db.sections.toArray()
     const existingCategories = await db.categories.toArray()
-    let existingEntries = await db.entries.toArray()
+    const existingEntries = await db.entries.toArray()
 
     const oldToNewSection = new Map<number, number>()
 
@@ -183,33 +105,28 @@ export async function executeImport(
 
     const oldToNewEntry = new Map<number, number>()
 
-    for (let i = 0; i < data.entries.length; i++) {
-      const e = data.entries[i]
+    for (const e of data.entries) {
       const catId = oldToNewCategory.get(e.categoryId) ?? e.categoryId
-
-      if (overwriteIndices.has(i)) {
-        const existingEntry = existingEntries.find(ex =>
-          ex.title === e.title && ex.categoryId === catId && !ex.deletedAt
-        )
-        if (existingEntry) {
-          await db.entries.update(existingEntry.id!, {
-            categoryId: catId,
-            title: e.title,
-            contentHtml: e.contentHtml,
-            pinned: e.pinned ?? false,
-            deletedAt: e.deletedAt ?? null,
-            trashDays: e.trashDays ?? 7,
-            compressed: e.compressed ?? false,
-            updatedAt: e.updatedAt || new Date(),
-          } as any)
-          oldToNewEntry.set(e.id, existingEntry.id!)
-        }
+      const existingEntry = existingEntries.find(ex =>
+        ex.title === e.title && ex.categoryId === catId && !ex.deletedAt
+      )
+      if (existingEntry) {
+        await db.entries.update(existingEntry.id!, {
+          categoryId: catId,
+          title: e.title,
+          contentHtml: e.contentHtml,
+          pinned: e.pinned ?? false,
+          deletedAt: e.deletedAt ?? null,
+          trashDays: e.trashDays ?? 7,
+          compressed: e.compressed ?? false,
+          updatedAt: e.updatedAt || new Date(),
+        } as any)
+        oldToNewEntry.set(e.id, existingEntry.id!)
       } else {
-        const title = nextAvailableTitle(e.title, catId, existingEntries)
         const now = new Date()
         const newId = await db.entries.add({
           categoryId: catId,
-          title,
+          title: e.title,
           contentHtml: e.contentHtml,
           pinned: e.pinned ?? false,
           deletedAt: e.deletedAt ?? null,
