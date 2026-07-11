@@ -1,9 +1,10 @@
-import { StrictMode } from 'react'
+import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { SplashScreen } from './components/SplashScreen'
 import { router } from './router'
 import './index.css'
 
@@ -49,14 +50,27 @@ if (typeof window !== 'undefined') {
   })
 }
 
+function AppRoot() {
+  const [ready, setReady] = useState(false)
+
+  return (
+    <>
+      {!ready && <SplashScreen onComplete={() => setReady(true)} />}
+      <div style={{ opacity: ready ? 1 : 0, transition: 'opacity 400ms ease-out' }}>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <ToastProvider>
+              <RouterProvider router={router} />
+            </ToastProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </div>
+    </>
+  )
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
-      <ThemeProvider>
-        <ToastProvider>
-          <RouterProvider router={router} />
-        </ToastProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <AppRoot />
   </StrictMode>,
 )
