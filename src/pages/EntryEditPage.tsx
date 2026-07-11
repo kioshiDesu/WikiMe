@@ -144,7 +144,6 @@ export function EntryEditPage() {
     setConfig({
       title: isEditing ? 'Edit Entry' : 'New Entry',
       showBack: true,
-      onBack: () => navigate(-1),
       rightAction: (
         <div className="flex items-center gap-1.5 px-1">
           <FontAwesomeIcon

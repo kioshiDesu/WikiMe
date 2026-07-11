@@ -3,12 +3,14 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faMoon, faSun, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { useHeader } from '../context/HeaderContext'
+import { useNavigationHistory } from '../context/NavigationHistoryContext'
 import { useTheme } from '../context/ThemeContext'
 import { PageTransition } from './PageTransition'
 import { db, DEFAULT_TRASH_DAYS } from '../db/db'
 
 export function AppShell() {
   const { config } = useHeader()
+  const { goBack } = useNavigationHistory()
   const { dark, toggle } = useTheme()
   const location = useLocation()
   const navigate = useNavigate()
@@ -53,7 +55,7 @@ export function AppShell() {
           <button
             onClick={() => {
               if (config.onBack) config.onBack()
-              else navigate(-1)
+              else goBack()
             }}
             className="min-w-10 min-h-10 flex items-center justify-center -ml-2 rounded-xl text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-all"
           >

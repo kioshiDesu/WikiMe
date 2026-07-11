@@ -195,7 +195,6 @@ export function EntryViewPage() {
     setConfig({
       title: entry.title || 'Untitled',
       showBack: true,
-      onBack: () => navigate(-1),
       rightAction: (
         <button
           onClick={() => {

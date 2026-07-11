@@ -1,5 +1,6 @@
 import { createHashRouter } from 'react-router-dom'
 import { HeaderProvider } from './context/HeaderContext'
+import { NavigationHistoryProvider } from './context/NavigationHistoryContext'
 import { AppShell } from './components/AppShell'
 import { HomePage } from './pages/HomePage'
 import { CategoryPage } from './pages/CategoryPage'
@@ -12,7 +13,7 @@ import { TrashPage } from './pages/TrashPage'
 
 export const router = createHashRouter([
   {
-    element: <HeaderProvider><AppShell /></HeaderProvider>,
+    element: <HeaderProvider><NavigationHistoryProvider><AppShell /></NavigationHistoryProvider></HeaderProvider>,
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/category/new', element: <NewCategoryPage /> },
