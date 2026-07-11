@@ -4,7 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faUpload, faInfoCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { useHeader } from '../context/HeaderContext'
 import { useToast } from '../context/ToastContext'
-import { exportData, executeImport } from '../utils/exportImport'
+import { exportData, analyzeImport, executeImport } from '../utils/exportImport'
+import type { EntryConflict } from '../utils/exportImport'
 import { Modal } from '../components/Modal'
 import { db } from '../db/db'
 
@@ -26,6 +27,9 @@ export function SettingsPage() {
   const captchaAnswer = useMemo(() => captchaA + captchaB, [captchaA, captchaB])
   const captchaCorrect = String(captchaAnswer) === captchaInput.trim()
 
+  const [importRaw, setImportRaw] = useState<string | null>(null)
+  const [conflicts, setConflicts] = useState<EntryConflict[]>([])
+  const [overwriteSet, setOverwriteSet] = useState<Set<number>>(new Set())
   const [importing, setImporting] = useState(false)
 
   useEffect(() => {
@@ -45,16 +49,53 @@ export function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    setImporting(true)
     try {
       const text = await file.text()
-      await executeImport(text)
+      const result = await analyzeImport(text)
+      if (result.conflicts.length === 0) {
+        setImporting(true)
+        await executeImport(text, new Set())
+        showToast('Data imported successfully', 'success')
+        navigate('/')
+      } else {
+        setImportRaw(text)
+        setConflicts(result.conflicts)
+        setOverwriteSet(new Set(result.conflicts.map(c => c.index)))
+      }
+    } catch {
+      showToast('Invalid backup file', 'error')
+    }
+  }
+
+  const toggleConflict = (index: number) => {
+    setOverwriteSet(prev => {
+      const next = new Set(prev)
+      if (next.has(index)) {
+        next.delete(index)
+      } else {
+        next.add(index)
+      }
+      return next
+    })
+  }
+
+  const handleImport = async () => {
+    if (!importRaw) return
+    setImporting(true)
+    try {
+      await executeImport(importRaw, overwriteSet)
       showToast('Data imported successfully', 'success')
       navigate('/')
     } catch {
-      showToast('Invalid backup file', 'error')
+      showToast('Import failed', 'error')
       setImporting(false)
     }
+  }
+
+  const closeConflictModal = () => {
+    setImportRaw(null)
+    setConflicts([])
+    setOverwriteSet(new Set())
   }
 
   const handleErase = async () => {
@@ -130,6 +171,55 @@ export function SettingsPage() {
           <span>WikiMe v1.0 — All data stored locally on your device.</span>
         </div>
       </div>
+
+      <Modal
+        open={conflicts.length > 0}
+        onClose={closeConflictModal}
+        title="Resolve Conflicts"
+      >
+        <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          {conflicts.length} entr{conflicts.length === 1 ? 'y' : 'ies'} with the same title already exist.
+          <br />
+          <strong className="text-gray-900 dark:text-gray-100">Checked</strong> = overwrite existing, <strong className="text-gray-900 dark:text-gray-100">unchecked</strong> = add as copy with a number suffix.
+        </p>
+        <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
+          {conflicts.map(c => (
+            <label
+              key={c.index}
+              className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl cursor-pointer active:bg-gray-100 dark:active:bg-gray-700 transition-all"
+            >
+              <input
+                type="checkbox"
+                checked={overwriteSet.has(c.index)}
+                onChange={() => toggleConflict(c.index)}
+                className="w-4 h-4 rounded accent-teal-500"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{c.title}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{c.categoryName}</div>
+              </div>
+              <span className="text-xs font-medium text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                {overwriteSet.has(c.index) ? 'Overwrite' : 'Add copy'}
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={closeConflictModal}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleImport}
+            disabled={importing}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-teal-500 active:bg-teal-600 disabled:opacity-50 transition-all"
+          >
+            {importing ? 'Importing...' : 'Import'}
+          </button>
+        </div>
+      </Modal>
 
       <Modal
         open={showErase}
