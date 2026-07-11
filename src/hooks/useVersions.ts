@@ -23,7 +23,7 @@ export function useVersions() {
       entryId,
       title: norm(title),
       contentHtml: contentHtml,
-      compressed: true,
+      compressed: false,
       savedAt: new Date(),
     })
     const updated = await db.versions.where('entryId').equals(entryId).sortBy('savedAt')

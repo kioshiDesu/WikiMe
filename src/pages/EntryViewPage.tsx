@@ -8,7 +8,6 @@ import { useEntries } from '../hooks/useEntries'
 import { addRecentEntry } from '../utils/recent'
 import { useToast } from '../context/ToastContext'
 import { Modal, ConfirmModal } from '../components/Modal'
-import { EmptyState } from '../components/EmptyState'
 import { ContentSkeleton } from '../components/SkeletonLoader'
 import { iconLookup } from '../utils/icons'
 
@@ -195,6 +194,7 @@ export function EntryViewPage() {
     setConfig({
       title: entry.title || 'Untitled',
       showBack: true,
+      onBack: () => navigate(`/category/${entry.categoryId}`),
       rightAction: (
         <button
           onClick={() => {

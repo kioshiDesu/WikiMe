@@ -33,8 +33,8 @@ export function SettingsPage() {
   const [importing, setImporting] = useState(false)
 
   useEffect(() => {
-    setConfig({ title: 'Settings', showBack: true })
-  }, [setConfig])
+    setConfig({ title: 'Settings', showBack: true, onBack: () => navigate('/') })
+  }, [setConfig, navigate])
 
   const handleExport = async () => {
     try {

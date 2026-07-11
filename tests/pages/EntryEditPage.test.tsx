@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, waitFor } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor as waitForTL, fireEvent, act } from '@testing-library/react'
 import { EntryEditPage } from '../../src/pages/EntryEditPage'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -6,7 +6,7 @@ import { HeaderProvider } from '../../src/context/HeaderContext'
 import { ThemeProvider } from '../../src/context/ThemeContext'
 import { ToastProvider } from '../../src/context/ToastContext'
 import { db } from '../../src/db/db'
-import { vi as viFn } from 'vitest'
+
 
 vi.mock('../../src/db/db', () => ({
   db: {

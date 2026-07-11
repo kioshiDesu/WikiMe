@@ -1,10 +1,6 @@
 import { registerPlugin } from '@capacitor/core'
 
-export interface SaveToDownloadsPlugin {
-  save(options: { data: string; filename: string }): Promise<{ uri: string }>
-}
-
-const SaveToDownloads = registerPlugin<SaveToDownloadsPlugin>('SaveToDownloads', {
+const SaveToDownloads = registerPlugin<{ save(options: { data: string; filename: string }): Promise<{ uri: string }> }>('SaveToDownloads', {
   web: () => ({
     save: async ({ data, filename }) => {
       const blob = new Blob([data], { type: 'application/json' })

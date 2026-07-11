@@ -24,7 +24,7 @@ export function TrashPage() {
 
   useEffect(() => {
     setConfig({
-      title: 'Trash', showBack: true,
+      title: 'Trash', showBack: true, onBack: () => navigate('/'),
       rightAction: trashedEntries.length > 0 ? (
         <button
           onClick={() => setShowAutoDelete(true)}

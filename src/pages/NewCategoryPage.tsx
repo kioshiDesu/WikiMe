@@ -30,8 +30,8 @@ export function NewCategoryPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    setConfig({ title: 'New Category', showBack: true })
-  }, [setConfig])
+    setConfig({ title: 'New Category', showBack: true, onBack: () => navigate('/') })
+  }, [setConfig, navigate])
 
   const handleSave = async () => {
     if (!name.trim()) {

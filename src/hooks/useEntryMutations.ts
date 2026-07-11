@@ -33,7 +33,7 @@ export function useEntryMutations() {
     const id = await db.entries.add({
       ...data,
       contentHtml: rawContent,
-      compressed: true,
+      compressed: false,
       deletedAt: null,
       trashDays: DEFAULT_TRASH_DAYS,
       createdAt: now,
@@ -57,7 +57,7 @@ export function useEntryMutations() {
     if (data.contentHtml !== undefined) {
       rawContent = data.contentHtml
       updateData.contentHtml = rawContent
-      updateData.compressed = true
+      updateData.compressed = false
     }
     await db.entries.update(id, updateData)
     if (data.title !== undefined || rawContent !== undefined) {

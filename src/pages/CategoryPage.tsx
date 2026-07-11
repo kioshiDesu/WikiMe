@@ -87,6 +87,7 @@ export function CategoryPage() {
     setConfig({
       title: category.name,
       showBack: true,
+      onBack: () => navigate('/'),
       rightAction: (
         <div className="flex gap-1">
           {entries.length > 0 && (

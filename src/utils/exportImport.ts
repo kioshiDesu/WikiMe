@@ -17,6 +17,10 @@ interface ImportData {
   versions: any[]
 }
 
+function stripSuffix(title: string): string {
+  return title.replace(/\s+\(\d+\)$/, '')
+}
+
 function reviveDates(data: ImportData): void {
   const dateFields = ['createdAt', 'updatedAt', 'deletedAt', 'savedAt']
   for (const table of ['sections', 'categories', 'entries', 'versions'] as const) {
@@ -73,9 +77,10 @@ export async function analyzeImport(raw: string): Promise<{
   const oldToNewCategory = new Map<number, number | 'new'>()
 
   for (const c of data.categories) {
-    const targetSectionId = c.sectionId != null
+    let targetSectionId: number | null = c.sectionId != null
       ? (oldToNewSection.get(c.sectionId) ?? null)
       : null
+    if (typeof targetSectionId !== 'number') targetSectionId = null
     const match = existingCategories.find(ex =>
       ex.name === c.name &&
       (targetSectionId == null ? ex.sectionId == null : ex.sectionId === targetSectionId)
@@ -88,7 +93,7 @@ export async function analyzeImport(raw: string): Promise<{
     const catId = oldToNewCategory.get(e.categoryId)
     if (catId == null || catId === 'new') continue
     const existingEntry = existingEntries.find(ex =>
-      ex.title === e.title && ex.categoryId === catId && !ex.deletedAt
+      stripSuffix(ex.title) === stripSuffix(e.title) && ex.categoryId === catId && !ex.deletedAt
     )
     if (existingEntry) {
       const cat = existingCategories.find(c => c.id === catId)
@@ -185,7 +190,7 @@ export async function executeImport(raw: string, overwriteIndices: Set<number>):
 
       if (overwriteIndices.has(i)) {
         const existingEntry = existingEntries.find(ex =>
-          ex.title === e.title && ex.categoryId === catId && !ex.deletedAt
+          stripSuffix(ex.title) === stripSuffix(e.title) && ex.categoryId === catId && !ex.deletedAt
         )
         if (existingEntry) {
           await db.entries.update(existingEntry.id!, {
@@ -195,7 +200,7 @@ export async function executeImport(raw: string, overwriteIndices: Set<number>):
             pinned: e.pinned ?? false,
             deletedAt: e.deletedAt ?? null,
             trashDays: e.trashDays ?? 7,
-            compressed: e.compressed ?? false,
+            compressed: false,
             updatedAt: e.updatedAt || new Date(),
           } as any)
           oldToNewEntry.set(e.id, existingEntry.id!)
@@ -210,7 +215,7 @@ export async function executeImport(raw: string, overwriteIndices: Set<number>):
           pinned: e.pinned ?? false,
           deletedAt: e.deletedAt ?? null,
           trashDays: e.trashDays ?? 7,
-          compressed: e.compressed ?? false,
+          compressed: false,
           createdAt: e.createdAt || now,
           updatedAt: e.updatedAt || now,
         } as any)

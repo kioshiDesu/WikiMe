@@ -1,7 +1,6 @@
 import path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import CopyWebpackPlugin from 'copy-webpack-plugin'
 
 const isDev = process.env.NODE_ENV !== 'production'
 
@@ -11,9 +10,6 @@ export default {
     path: path.resolve('dist'),
     filename: 'bundle.js',
     clean: true,
-  },
-  optimization: {
-    concatenateModules: false,
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
@@ -48,20 +44,11 @@ export default {
     new HtmlWebpackPlugin({
       template: 'index.html',
     }),
-    new CopyWebpackPlugin({
-      patterns: [
-        { from: 'public', to: '.', noErrorOnMissing: true },
-      ],
-    }),
     ...(isDev ? [] : [new MiniCssExtractPlugin({ filename: 'styles.css' })]),
   ],
   devServer: {
     port: 5173,
     hot: true,
     historyApiFallback: true,
-    static: {
-      directory: path.resolve('public'),
-      publicPath: '/',
-    },
   },
 }

@@ -50,7 +50,6 @@ export async function rebuildAllSearchIndexes(db: WikiMeDB): Promise<void> {
 }
 
 let _rebuildingIndex = false
-export function isRebuildingIndex(): boolean { return _rebuildingIndex }
 export function setRebuildingIndex(v: boolean): void { _rebuildingIndex = v }
 
 export async function searchEntries(

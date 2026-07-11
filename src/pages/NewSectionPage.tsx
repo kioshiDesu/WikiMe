@@ -42,8 +42,9 @@ export function NewSectionPage() {
     setConfig({
       title: isEditing ? 'Edit Section' : 'New Section',
       showBack: true,
+      onBack: () => navigate('/'),
     })
-  }, [setConfig, isEditing])
+  }, [setConfig, isEditing, navigate])
 
   const handleSave = async () => {
     if (!name.trim()) {

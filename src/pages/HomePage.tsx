@@ -17,7 +17,7 @@ import { useToast } from '../context/ToastContext'
 import { FAB } from '../components/FAB'
 import { iconLookup } from '../utils/icons'
 import { getRecentEntries, clearRecentEntries, type RecentEntry } from '../utils/recent'
-import { db } from '../db/db'
+import { db, type Entry } from '../db/db'
 import { searchEntries, rebuildAllSearchIndexes } from '../utils/searchIndex'
 import type { Category } from '../types'
 
