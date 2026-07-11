@@ -142,10 +142,10 @@ export async function executeImport(raw: string): Promise<void> {
     if (data.versions?.length) {
       const migrated = data.versions
         .filter((v: any) => oldToNewEntry.has(v.entryId))
-        .map((v: any) => ({
-          ...v,
-          entryId: oldToNewEntry.get(v.entryId),
-        }))
+        .map((v: any) => {
+          const { id, ...rest } = v
+          return { ...rest, entryId: oldToNewEntry.get(v.entryId) }
+        })
       if (migrated.length > 0) {
         await db.versions.bulkAdd(migrated)
       }
