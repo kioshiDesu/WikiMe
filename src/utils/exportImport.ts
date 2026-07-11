@@ -1,6 +1,6 @@
 import { db } from '../db/db'
 import LZString from 'lz-string'
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
+import SaveToDownloads from '../utils/saveToDownloads'
 
 
 export interface EntryConflict {
@@ -249,22 +249,6 @@ export async function exportData(): Promise<string> {
   }
   const json = JSON.stringify(data, null, 2)
   const filename = `wikime-backup-${new Date().toISOString().split('T')[0]}.json`
-
-  let result
-  try {
-    result = await Filesystem.writeFile({
-      path: filename,
-      data: json,
-      directory: Directory.External,
-      encoding: Encoding.UTF8,
-    })
-  } catch {
-    result = await Filesystem.writeFile({
-      path: filename,
-      data: json,
-      directory: Directory.Data,
-      encoding: Encoding.UTF8,
-    })
-  }
-  return result.uri
+  const { uri } = await SaveToDownloads.save({ data: json, filename })
+  return uri
 }

@@ -39,7 +39,7 @@ export function SettingsPage() {
   const handleExport = async () => {
     try {
       const uri = await exportData()
-      showToast(`Backup saved: ${uri}`, 'success')
+      showToast(`Backup saved to Downloads`, 'success')
     } catch (e) {
       showToast(`Export failed: ${e}`, 'error')
     }
