@@ -1,7 +1,7 @@
 import { db } from '../db/db'
 import LZString from 'lz-string'
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
-import { Share } from '@capacitor/share'
+
 
 export interface EntryConflict {
   index: number
@@ -250,16 +250,10 @@ export async function exportData() {
   const json = JSON.stringify(data, null, 2)
   const filename = `wikime-backup-${new Date().toISOString().split('T')[0]}.json`
 
-  const uri = await Filesystem.writeFile({
+  await Filesystem.writeFile({
     path: filename,
     data: json,
-    directory: Directory.Data,
+    directory: Directory.External,
     encoding: Encoding.UTF8,
   })
-
-  try {
-    await Share.share({ files: [uri.uri], title: filename })
-  } catch {
-    /* user cancelled */
-  }
 }
