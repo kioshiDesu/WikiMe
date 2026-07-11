@@ -239,7 +239,7 @@ export async function executeImport(
   await rebuildAllSearchIndexes(db)
 }
 
-export async function exportData() {
+export async function exportData(): Promise<string> {
   const data = {
     version: 3,
     categories: await db.categories.toArray(),
@@ -250,10 +250,21 @@ export async function exportData() {
   const json = JSON.stringify(data, null, 2)
   const filename = `wikime-backup-${new Date().toISOString().split('T')[0]}.json`
 
-  await Filesystem.writeFile({
-    path: filename,
-    data: json,
-    directory: Directory.External,
-    encoding: Encoding.UTF8,
-  })
+  let result
+  try {
+    result = await Filesystem.writeFile({
+      path: filename,
+      data: json,
+      directory: Directory.External,
+      encoding: Encoding.UTF8,
+    })
+  } catch {
+    result = await Filesystem.writeFile({
+      path: filename,
+      data: json,
+      directory: Directory.Data,
+      encoding: Encoding.UTF8,
+    })
+  }
+  return result.uri
 }
