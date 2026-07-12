@@ -78,7 +78,7 @@ export function AppShell() {
   const showBack = config.showBack && !isHome
 
   return (
-    <div className="flex flex-col h-dvh bg-gray-50 dark:bg-gray-950">
+    <div className="flex flex-col h-dvh bg-surface">
       <header className="flex-none flex items-center gap-3 px-4 h-12 bg-white/90 dark:bg-gray-950/90 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 z-30 transition-all">
         {showBack && (
           <button
@@ -122,27 +122,32 @@ export function AppShell() {
       <PageTransition><Outlet /></PageTransition>
 
       <Modal open={showThemePicker} onClose={() => setShowThemePicker(false)} title="Choose Theme">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
           {themePresets.map(p => (
             <button
               key={p.id}
               onClick={() => { setTheme(p.id); setShowThemePicker(false) }}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 theme.id === p.id
-                  ? 'border-accent bg-accent-50'
-                  : 'border-transparent bg-gray-100 dark:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700'
+                  ? 'bg-accent-50 border-accent'
+                  : 'active:bg-gray-100 dark:active:bg-gray-800'
               }`}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                p.isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-700'
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                p.isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-600'
               }`}>
-                <FontAwesomeIcon icon={themeIcons[p.icon] || faSun} className="w-5 h-5" />
+                <FontAwesomeIcon icon={themeIcons[p.icon] || faSun} className="w-4 h-4" />
               </div>
-              <span className={`text-xs font-medium ${
-                theme.id === p.id ? 'text-accent-dark' : 'text-gray-700 dark:text-gray-300'
-              }`}>
-                {p.name}
-              </span>
+              <div className="flex-1 text-left">
+                <div className={`text-sm font-medium ${
+                  theme.id === p.id ? 'text-accent-dark' : 'text-gray-900 dark:text-gray-100'
+                }`}>
+                  {p.name}
+                </div>
+              </div>
+              {theme.id === p.id && (
+                <div className="w-2 h-2 rounded-full bg-accent" />
+              )}
             </button>
           ))}
         </div>
